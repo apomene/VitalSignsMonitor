@@ -1,7 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using VitalSignsMonitor.Models;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure EF Core with SQLite
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite("Data Source=vitals.db"));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+
 
 var app = builder.Build();
 
@@ -19,6 +28,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+
 
 app.MapControllerRoute(
     name: "default",
