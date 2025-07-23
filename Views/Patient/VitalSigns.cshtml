@@ -41,26 +41,50 @@
 
     <script>
         const patientId = @patient.Id;
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/vitalshub")
-            .build();
-
+      
         const chartCtx = document.getElementById('vitalsChart').getContext('2d');
-        const chart = new Chart(chartCtx, {
+               const chart = new Chart(chartCtx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [
                     { label: 'Heart Rate', data: [], borderColor: 'red', fill: false },
-                    { label: 'O₂ Saturation', data: [], borderColor: 'blue', fill: false }
+                    { label: 'O₂ Saturation', data: [], borderColor: 'blue', fill: false },
+                    { label: 'Systolic Pressure', data: [], borderColor: 'green', fill: false },
+                    { label: 'Diastolic Pressure', data: [], borderColor: 'yellow', fill: false }
                 ]
             },
             options: {
                 responsive: true,
                 animation: false,
-                scales: { x: { display: true }, y: { beginAtZero: true } }
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
             }
         });
+
 
         function updateTable(v) {
             const row = `<tr>
@@ -114,6 +138,28 @@
             if (o2 < 95) return "table-warning";
             return "table-success";
         }
+
+            async function loadHistoricalData() {
+            const response = await fetch(`/api/patient/${patientId}/vitals/history`);
+            if (!response.ok) return;
+
+            const data = await response.json();
+            data.forEach(v => {
+                const timeLabel = new Date(v.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit' });
+
+
+                chart.data.labels.push(timeLabel);
+                chart.data.datasets[0].data.push(v.heartRate);
+                chart.data.datasets[1].data.push(v.oxygenSaturation);
+                chart.data.datasets[2].data.push(v.systolicBP);
+                chart.data.datasets[3].data.push(v.diastolicBP);
+            });
+
+            chart.update();
+        }
+
+        // Load historical data once on page load
+        loadHistoricalData();
     </script>
 }
 

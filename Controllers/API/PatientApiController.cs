@@ -14,7 +14,7 @@ namespace VitalSignsMonitor.Controllers.API
         private readonly ApplicationDbContext _context;
         private readonly IHubContext<VitalSignsHub> _hub;
 
-        public PatientApiController( ApplicationDbContext context, IHubContext<VitalSignsHub> hub)
+        public PatientApiController(ApplicationDbContext context, IHubContext<VitalSignsHub> hub)
         {
             _context = context;
             _hub = hub;
@@ -70,7 +70,7 @@ namespace VitalSignsMonitor.Controllers.API
                 Timestamp = DateTime.UtcNow
 
             };
-          
+
             _context.VitalSigns.Add(vitalSign);
             await _context.SaveChangesAsync();
 
@@ -78,6 +78,19 @@ namespace VitalSignsMonitor.Controllers.API
 
             return Ok(vitalSign);
         }
-    }
 
+        [HttpGet("{id}/vitals/history")]
+        public async Task<IActionResult> GetVitalsHistory(int id)
+        {
+            var since = DateTime.UtcNow.AddHours(-24);
+
+            var vitals = await _context.VitalSigns
+                .Where(v => v.PatientId == id && v.Timestamp >= since)
+                .OrderBy(v => v.Timestamp)
+                .ToListAsync();
+
+            return Ok(vitals);
+        }
+
+    }
 }

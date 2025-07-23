@@ -40,6 +40,7 @@ namespace VitalSignsMonitor.Controllers
             ViewBag.Patient = patient;
             return View(vitals);
         }
+      
 
     }
 }
