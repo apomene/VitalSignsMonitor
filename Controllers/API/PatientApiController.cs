@@ -48,11 +48,32 @@ namespace VitalSignsMonitor.Controllers.API
 
         // POST: /api/patient/{id}/vitals
         [HttpPost("{id}/vitals")]
-        public async Task<IActionResult> PostVitalSigns(int id, [FromBody] VitalSign vitalSign)
+        public async Task<IActionResult> PostVitalSigns(int id, [FromBody] Vitals vital)
         {
-            vitalSign.PatientId = id;
-            vitalSign.Timestamp = DateTime.UtcNow;
+            if (vital.heartRate < 0 || vital.heartRate > 200)
+                return BadRequest("Heart rate must be between 0 and 200.");
 
+            if (vital.systolicBP < 50 || vital.systolicBP > 250)
+                return BadRequest("Systolic pressure must be within a safe range.");
+
+            if (vital.diastolicBP < 30 || vital.diastolicBP > 150)
+                return BadRequest("Diastolic pressure must be within a safe range.");
+
+            if (vital.oxygenSaturation < 50 || vital.oxygenSaturation > 100)
+                return BadRequest("Oxygen saturation must be 50–100%.");
+
+            VitalSign vitalSign = new VitalSign
+            {
+                HeartRate = vital.heartRate,
+                SystolicBP = vital.systolicBP,
+                DiastolicBP = vital.diastolicBP,
+                OxygenSaturation = vital.oxygenSaturation,
+                PatientId = id,
+                Timestamp = DateTime.UtcNow
+
+            };
+
+           
             _context.VitalSigns.Add(vitalSign);
             await _context.SaveChangesAsync();
 

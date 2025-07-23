@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "Submit Vital Signs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Submit Vital Signs</h2>
+
+<form id="vitalsForm">
+    <div class="mb-3">
+        <label for="patientSelect" class="form-label">Select Patient</label>
+        <select id="patientSelect" class="form-select" required>
+            <option value="">-- Select Patient --</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="heartRate" class="form-label">Heart Rate (bpm)</label>
+        <input type="number" class="form-control" id="heartRate" required />
+    </div>
+    <div class="mb-3">
+        <label for="bloodPressureSystolic" class="form-label">Blood Pressure - Systolic</label>
+        <input type="number" class="form-control" id="bloodPressureSystolic" required />
+    </div>
+    <div class="mb-3">
+        <label for="bloodPressureDiastolic" class="form-label">Blood Pressure - Diastolic</label>
+        <input type="number" class="form-control" id="bloodPressureDiastolic" required />
+    </div>
+    <div class="mb-3">
+        <label for="oxygenSaturation" class="form-label">Oxygen Saturation (%)</label>
+        <input type="number" class="form-control" id="oxygenSaturation" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<div class="mt-3" id="result"></div>
+
+@section Scripts {
+   
+    <script>
+        // Load patients into dropdown
+        fetch('/api/patient')
+            .then(res => res.json())
+            .then(patients => {
+                const select = document.getElementById('patientSelect');
+                patients.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.text = `${p.name} (Room ${p.roomNumber})`;
+                    select.appendChild(option);
+                });
+            });
+
+        connection.on("ReceiveVital", vital => {
+            const result = document.getElementById("result");
+            const time = new Date(vital.timestamp).toLocaleString();
+            result.innerHTML = `
+                <div class="alert alert-info">
+                    Real-time: New vitals for Patient ID ${vital.patientId} at ${time}.
+                </div>
+            `;
+        });
+
+
+        // Submit form
+        document.getElementById("vitalsForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const patientId = document.getElementById("patientSelect").value;
+            const heartRate = parseInt(document.getElementById("heartRate").value);
+            const systolic = parseInt(document.getElementById("bloodPressureSystolic").value);
+            const diastolic = parseInt(document.getElementById("bloodPressureDiastolic").value);
+            const oxygen = parseFloat(document.getElementById("oxygenSaturation").value);
+
+            if (!patientId) {
+                alert("Please select a patient.");
+                return;
+            }
+
+                   const payload = {
+          heartRate: heartRate,
+          systolicBP: systolic,
+          diastolicBP: diastolic,
+          oxygenSaturation: oxygen
+        };
+
+
+            fetch(`/api/patient/${patientId}/vitals`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to post vitals.");
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById("result").innerHTML = `
+                    <div class="alert alert-success">
+                        Submitted successfully at ${new Date(data.timestamp).toLocaleString()}.
+                    </div>
+                `;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("result").innerHTML = `
+                    <div class="alert alert-danger">
+                        ${err.message}
+                    </div>
+                `;
+            });
+        });
+    </script>
+}

@@ -21,6 +21,12 @@ namespace VitalSignsMonitor.Controllers
             return View();
         }
 
+        public IActionResult PostVitals()
+        {
+            return View();
+        }
+
+
         public async Task<IActionResult> VitalSigns(int id)
         {
             var patient = await _context.Patients.FindAsync(id);

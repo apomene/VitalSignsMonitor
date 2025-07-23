@@ -96,7 +96,6 @@
             updateChart(v);
         });
 
-        connection.start().catch(err => console.error(err));
 
         function getClassForHeartRate(hr) {
             if (hr > 120) return "table-danger";
