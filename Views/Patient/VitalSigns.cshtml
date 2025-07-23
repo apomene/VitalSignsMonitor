@@ -1,0 +1,142 @@
+﻿@model IEnumerable<VitalSignsMonitor.Models.VitalSign>
+@{
+    ViewData["Title"] = "Live Vitals";
+    var patient = ViewBag.Patient as VitalSignsMonitor.Models.Patient;
+}
+
+<h2>Vitals for @patient.Name (Room @patient.RoomNumber)</h2>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Heart Rate</th>
+                    <th>BP</th>
+                    <th>O₂ Sat</th>
+                </tr>
+            </thead>
+            <tbody id="vitalsBody">
+                @foreach (var v in Model.OrderByDescending(v => v.Timestamp).Take(10))
+                {
+                    <tr>
+                        <td>@v.Timestamp.ToLocalTime().ToString("T")</td>
+                        <td class="@GetClassForHeartRate(v.HeartRate)">@v.HeartRate</td>
+                        <td class="@GetClassForBloodPressure(v.SystolicBP, v.DiastolicBP)">@v.SystolicBP/@v.DiastolicBP</td>
+                        <td class="@GetClassForOxygen(v.OxygenSaturation)">@v.OxygenSaturation%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <canvas id="vitalsChart"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const patientId = @patient.Id;
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/vitalshub")
+            .build();
+
+        const chartCtx = document.getElementById('vitalsChart').getContext('2d');
+        const chart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    { label: 'Heart Rate', data: [], borderColor: 'red', fill: false },
+                    { label: 'O₂ Saturation', data: [], borderColor: 'blue', fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                scales: { x: { display: true }, y: { beginAtZero: true } }
+            }
+        });
+
+        function updateTable(v) {
+            const row = `<tr>
+                <td>${new Date(v.timestamp).toLocaleTimeString()}</td>
+                <td class="${getClassForHeartRate(v.heartRate)}">${v.heartRate}</td>
+                <td class="${getClassForBP(v.systolicBP, v.diastolicBP)}">${v.systolicBP}/${v.diastolicBP}</td>
+                <td class="${getClassForOxygen(v.oxygenSaturation)}">${v.oxygenSaturation}%</td>
+            </tr>`;
+            const tbody = document.getElementById("vitalsBody");
+            tbody.insertAdjacentHTML("afterbegin", row);
+            if (tbody.rows.length > 10) tbody.deleteRow(-1);
+        }
+
+        function updateChart(v) {
+            const t = new Date(v.timestamp).toLocaleTimeString();
+            if (chart.data.labels.length > 20) chart.data.labels.shift();
+            chart.data.labels.push(t);
+
+            chart.data.datasets[0].data.push(v.heartRate);
+            chart.data.datasets[1].data.push(v.oxygenSaturation);
+
+            if (chart.data.datasets[0].data.length > 20) {
+                chart.data.datasets[0].data.shift();
+                chart.data.datasets[1].data.shift();
+            }
+
+            chart.update();
+        }
+
+        connection.on("ReceiveVital", function (v) {
+            if (v.patientId !== patientId) return;
+            updateTable(v);
+            updateChart(v);
+        });
+
+        connection.start().catch(err => console.error(err));
+
+        function getClassForHeartRate(hr) {
+            if (hr > 120) return "table-danger";
+            if (hr > 100) return "table-warning";
+            return "table-success";
+        }
+
+        function getClassForBP(sys, dia) {
+            if (sys > 139 || dia > 90) return "table-danger";
+            if (sys >= 120 || dia >= 80) return "table-warning";
+            return "table-success";
+        }
+
+        function getClassForOxygen(o2) {
+            if (o2 < 90) return "table-danger";
+            if (o2 < 95) return "table-warning";
+            return "table-success";
+        }
+    </script>
+}
+
+@functions {
+    string GetClassForHeartRate(int hr)
+    {
+        if (hr > 120) return "table-danger";
+        if (hr > 100) return "table-warning";
+        return "table-success";
+    }
+
+    string GetClassForBloodPressure(int sys, int dia)
+    {
+        if (sys > 139 || dia > 90) return "table-danger";
+        if (sys >= 120 || dia >= 80) return "table-warning";
+        return "table-success";
+    }
+
+    string GetClassForOxygen(int oxygen)
+    {
+        if (oxygen < 90) return "table-danger";
+        if (oxygen < 95) return "table-warning";
+        return "table-success";
+    }
+}

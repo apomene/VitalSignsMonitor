@@ -1,8 +1,10 @@
 ﻿@{
-    ViewData["Title"] = "Patient List (via API)";
+    ViewData["Title"] = "Patient List";
 }
 
 <h2>Patient List</h2>
+
+<input type="text" id="searchBox" class="form-control mb-3" placeholder="Search by name or room..." />
 
 <table class="table table-bordered" id="patientsTable">
     <thead>
@@ -12,35 +14,14 @@
             <th>Room</th>
         </tr>
     </thead>
-    <tbody>
-        
+    <tbody id="patientsTableBody">
+        <!-- JS will fill this -->
     </tbody>
+
 </table>
+<div id="vitalsSection" class="mt-4 d-none">
+    <h4>Vitals for <span id="patientName"></span></h4>
+    <ul id="vitalsList"></ul>
+</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('/api/patient')
-            .then(response => {
-                if (!response.ok) throw new Error("API error");
-                return response.json();
-            })
-            .then(patients => {
-                const tableBody = document.querySelector('#patientsTable tbody');
-                tableBody.innerHTML = ''; // clear any existing rows
-
-                patients.forEach(p => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${p.name}</td>
-                        <td>${p.age}</td>
-                        <td>${p.roomNumber}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            })
-            .catch(error => {
-                console.error('Error loading patients:', error);
-                alert('Failed to load patients.');
-            });
-    });
-</script>
+<script src="~/js/patient.js" asp-append-version="true"></script>

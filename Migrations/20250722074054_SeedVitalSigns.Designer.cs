@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VitalSignsMonitor.Models;
 
@@ -10,9 +11,11 @@ using VitalSignsMonitor.Models;
 namespace VitalSignsMonitor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250722074054_SeedVitalSigns")]
+    partial class SeedVitalSigns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -101,7 +104,7 @@ namespace VitalSignsMonitor.Migrations
                             OxygenSaturation = 97,
                             PatientId = 1,
                             SystolicBP = 120,
-                            Timestamp = new DateTime(2025, 7, 21, 12, 0, 0, 0, DateTimeKind.Unspecified)
+                            Timestamp = new DateTime(2025, 7, 22, 7, 30, 54, 42, DateTimeKind.Utc).AddTicks(5810)
                         },
                         new
                         {
@@ -111,7 +114,7 @@ namespace VitalSignsMonitor.Migrations
                             OxygenSaturation = 92,
                             PatientId = 2,
                             SystolicBP = 135,
-                            Timestamp = new DateTime(2025, 7, 21, 12, 30, 0, 0, DateTimeKind.Unspecified)
+                            Timestamp = new DateTime(2025, 7, 22, 7, 20, 54, 42, DateTimeKind.Utc).AddTicks(6122)
                         },
                         new
                         {
@@ -121,7 +124,7 @@ namespace VitalSignsMonitor.Migrations
                             OxygenSaturation = 88,
                             PatientId = 3,
                             SystolicBP = 145,
-                            Timestamp = new DateTime(2025, 7, 21, 13, 0, 0, 0, DateTimeKind.Unspecified)
+                            Timestamp = new DateTime(2025, 7, 22, 7, 10, 54, 42, DateTimeKind.Utc).AddTicks(6127)
                         });
                 });
 

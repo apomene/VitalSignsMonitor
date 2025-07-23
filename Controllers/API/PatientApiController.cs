@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using VitalSignsMonitor.Hubs;
 using VitalSignsMonitor.Models;
 
 namespace VitalSignsMonitor.Controllers.API
@@ -11,11 +13,13 @@ namespace VitalSignsMonitor.Controllers.API
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<PatientController> _logger;
+        private readonly IHubContext<VitalSignsHub> _hub;
 
-        public PatientApiController(ILogger<PatientController> logger, ApplicationDbContext context)
+        public PatientApiController(ILogger<PatientController> logger, ApplicationDbContext context, IHubContext<VitalSignsHub> hub)
         {
             _context = context;
             _logger = logger;
+            _hub = hub;
         }
 
         // GET: /api/patient
@@ -46,26 +50,15 @@ namespace VitalSignsMonitor.Controllers.API
         [HttpPost("{id}/vitals")]
         public async Task<IActionResult> PostVitalSigns(int id, [FromBody] VitalSign vitalSign)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null)
-            {
-                return NotFound(new { message = $"Patient with ID {id} not found." });
-            }
-
-   
             vitalSign.PatientId = id;
             vitalSign.Timestamp = DateTime.UtcNow;
-
-        
-            if (vitalSign.HeartRate <= 0 || vitalSign.OxygenSaturation <= 0)
-            {
-                return BadRequest(new { message = "Invalid vital sign values." });
-            }
 
             _context.VitalSigns.Add(vitalSign);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetVitalsByPatientId), new { id = id }, vitalSign);
+            await _hub.Clients.All.SendAsync("ReceiveVital", vitalSign);
+
+            return Ok(vitalSign);
         }
     }
 

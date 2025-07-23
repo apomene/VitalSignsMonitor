@@ -1,7 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using VitalSignsMonitor.Models;
+using VitalSignsMonitor.Hubs;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
+
 
 // Configure EF Core with SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -11,8 +16,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddControllersWithViews();
 
 
-
 var app = builder.Build();
+app.MapHub<VitalSignsHub>("/vitalsHub");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
