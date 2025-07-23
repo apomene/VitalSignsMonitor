@@ -12,13 +12,11 @@ namespace VitalSignsMonitor.Controllers.API
     public class PatientApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<PatientController> _logger;
         private readonly IHubContext<VitalSignsHub> _hub;
 
-        public PatientApiController(ILogger<PatientController> logger, ApplicationDbContext context, IHubContext<VitalSignsHub> hub)
+        public PatientApiController( ApplicationDbContext context, IHubContext<VitalSignsHub> hub)
         {
             _context = context;
-            _logger = logger;
             _hub = hub;
         }
 
@@ -72,8 +70,7 @@ namespace VitalSignsMonitor.Controllers.API
                 Timestamp = DateTime.UtcNow
 
             };
-
-           
+          
             _context.VitalSigns.Add(vitalSign);
             await _context.SaveChangesAsync();
 

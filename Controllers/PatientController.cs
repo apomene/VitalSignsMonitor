@@ -7,13 +7,13 @@ namespace VitalSignsMonitor.Controllers
 {
     public class PatientController : Controller
     {
-        private readonly ILogger<PatientController> _logger;
+
         private readonly ApplicationDbContext _context;
 
-        public PatientController(ILogger<PatientController> logger, ApplicationDbContext context)
+        public PatientController(ApplicationDbContext context)
         {
             _context = context;
-            _logger = logger;
+
         }
 
         public IActionResult Index()
