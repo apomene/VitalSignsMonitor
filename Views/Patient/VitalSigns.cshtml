@@ -5,7 +5,11 @@
 }
 
 <h2>Vitals for @patient.Name (Room @patient.RoomNumber)</h2>
-
+<div class="mb-3">
+    <a class="btn btn-outline-primary" href="/api/patient/@patient.Id/vitals/export">
+        📄 Download CSV
+    </a>
+</div>
 <div class="row mt-4">
     <div class="col-md-6">
         <table class="table table-bordered">
@@ -18,7 +22,7 @@
                 </tr>
             </thead>
             <tbody id="vitalsBody">
-                @foreach (var v in Model.OrderByDescending(v => v.Timestamp).Take(10))
+                @foreach (var v in Model.OrderByDescending(v => v.Timestamp).Take(30))
                 {
                     <tr>
                         <td>@v.Timestamp.ToLocalTime().ToString("dd MMM yyyy, hh:mm:ss tt")</td>
@@ -30,6 +34,8 @@
             </tbody>
         </table>
     </div>
+   
+
 
     <div class="col-md-6">
         <canvas id="vitalsChart"></canvas>

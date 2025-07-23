@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 using VitalSignsMonitor.Hubs;
 using VitalSignsMonitor.Models;
 
@@ -91,6 +92,34 @@ namespace VitalSignsMonitor.Controllers.API
 
             return Ok(vitals);
         }
+
+        [HttpGet("{id}/vitals/export")]
+        public async Task<IActionResult> ExportVitalsToCsv(int id)
+        {
+            var vitals = await _context.VitalSigns
+                .Where(v => v.PatientId == id)
+                .OrderBy(v => v.Timestamp)
+                .ToListAsync();
+
+            if (!vitals.Any())
+            {
+                return NotFound($"No vital signs found for patient ID {id}.");
+            }
+
+            var csvBuilder = new StringBuilder();
+            csvBuilder.AppendLine("Timestamp,HeartRate,SystolicBP,DiastolicBP,OxygenSaturation");
+
+            foreach (var v in vitals)
+            {
+                csvBuilder.AppendLine($"{v.Timestamp:o},{v.HeartRate},{v.SystolicBP},{v.DiastolicBP},{v.OxygenSaturation}");
+            }
+
+            var fileName = $"vitals_patient_{id}_{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
+            var csvBytes = Encoding.UTF8.GetBytes(csvBuilder.ToString());
+
+            return File(csvBytes, "text/csv", fileName);
+        }
+
 
     }
 }
