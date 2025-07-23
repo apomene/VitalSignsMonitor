@@ -10,14 +10,14 @@ Response
 
     200 OK – Returns a list of patients.
 
-<pre> ```json
+<pre> 
   {
     "id": 1,
     "name": "John Doe",
     "roomNumber": "101"
   },
   ...
-``` </pre>
+ </pre>
 
 
 2. GET /api/patient/{id}/vitals
@@ -34,7 +34,7 @@ Response
 
     404 Not Found – If no vital signs exist for the given patient
 
-<pre> ```json
+<pre> 
   {
     "id": 25,
     "patientId": 1,
@@ -49,7 +49,7 @@ Response
 {
   "message": "No vital signs found for patient ID 1."
 }
-``` </pre>
+</pre>
 
 
 3. POST /api/patient/{id}/vitals
@@ -61,14 +61,14 @@ Parameters
     id (int) – Patient ID
 
 Request Body
-<pre> ```json
+<pre>
 {
   "heartRate": 75,
   "systolicBP": 120,
   "diastolicBP": 80,
   "oxygenSaturation": 97
 }
-``` </pre>
+</pre>
 Validations
 
     heartRate: 0–200
@@ -84,7 +84,7 @@ Response
     200 OK – Returns the saved vital sign
 
     400 Bad Request – If input values are outside allowed ranges
-<pre> ```json
+<pre> 
 {
   "id": 50,
   "patientId": 1,
@@ -94,7 +94,7 @@ Response
   "oxygenSaturation": 97,
   "timestamp": "2025-07-23T08:01:12Z"
 }
-``` </pre>
+ </pre>
 4. GET /api/patient/{id}/vitals/history
 Description
 
@@ -108,7 +108,7 @@ Response
     200 OK – List of vital signs in chronological order
     (empty list if no data in the last 24 hours)
 
-<pre> ```json
+<pre> 
   {
     "id": 31,
     "patientId": 1,
@@ -119,6 +119,6 @@ Response
     "timestamp": "2025-07-23T07:10:00Z"
   },
   ...
-``` </pre>
+ </pre>
 
 
