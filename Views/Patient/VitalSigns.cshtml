@@ -21,7 +21,7 @@
                 @foreach (var v in Model.OrderByDescending(v => v.Timestamp).Take(10))
                 {
                     <tr>
-                        <td>@v.Timestamp.ToLocalTime().ToString("T")</td>
+                        <td>@v.Timestamp.ToLocalTime().ToString("dd MMM yyyy, hh:mm:ss tt")</td>
                         <td class="@GetClassForHeartRate(v.HeartRate)">@v.HeartRate</td>
                         <td class="@GetClassForBloodPressure(v.SystolicBP, v.DiastolicBP)">@v.SystolicBP/@v.DiastolicBP</td>
                         <td class="@GetClassForOxygen(v.OxygenSaturation)">@v.OxygenSaturation%</td>
