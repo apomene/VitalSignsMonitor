@@ -9,4 +9,4 @@ A real-time Patient Vital Signs Monitoring Dashboard using ASP.NET Core with Raz
 
 ## 📘 API Documentation
 
-Full API reference is available [here →](./API_DOCS.md)
+Full API reference is available [here →](.API-documentation.md)
