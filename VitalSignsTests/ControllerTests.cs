@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 using VitalSignsMonitor.Controllers;
+using System.Text;
 
 namespace VitalSignsTests
 {
@@ -292,6 +293,49 @@ namespace VitalSignsTests
             var vitals = ok.Value as List<VitalSign>;
             Assert.That(vitals, Is.Not.Null);
             Assert.That(vitals.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task ExportVitalsToCsv_ReturnsFileWithCorrectContentTypeAndData()
+        {
+            // Arrange
+            int patientId = 1;
+            var now = DateTime.UtcNow;
+
+            _context.VitalSigns.AddRange(
+                new VitalSign
+                {
+                    PatientId = patientId,
+                    HeartRate = 80,
+                    SystolicBP = 120,
+                    DiastolicBP = 80,
+                    OxygenSaturation = 98,
+                    Timestamp = now.AddMinutes(-10)
+                },
+                new VitalSign
+                {
+                    PatientId = patientId,
+                    HeartRate = 85,
+                    SystolicBP = 130,
+                    DiastolicBP = 85,
+                    OxygenSaturation = 97,
+                    Timestamp = now.AddMinutes(-5)
+                }
+            );
+            await _context.SaveChangesAsync();
+
+            // Act
+            var result = await _controller.ExportVitalsToCsv(patientId);
+
+            // Assert
+            Assert.That(result, Is.InstanceOf<FileContentResult>());
+            var fileResult = result as FileContentResult;
+            Assert.That("text/csv" == fileResult.ContentType);
+
+            var content = Encoding.UTF8.GetString(fileResult.FileContents);
+            Assert.That(content.Contains("Timestamp,HeartRate,SystolicBP,DiastolicBP,OxygenSaturation"));
+            Assert.That(content.Contains("80"));
+            Assert.That(content.Contains("85"));
         }
 
 
