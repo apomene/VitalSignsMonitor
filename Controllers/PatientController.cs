@@ -2,9 +2,12 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VitalSignsMonitor.Models;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace VitalSignsMonitor.Controllers
 {
+    [Authorize]
     public class PatientController : Controller
     {
 
@@ -20,6 +23,7 @@ namespace VitalSignsMonitor.Controllers
         {
             return View();
         }
+
 
         public IActionResult PostVitals()
         {
