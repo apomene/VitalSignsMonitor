@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System;
 using VitalSignsMonitor.Controllers;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace VitalSignsTests
 {
@@ -20,6 +22,9 @@ namespace VitalSignsTests
         private ApplicationDbContext _context;
         private Mock<IHubContext<VitalSignsHub>> _hubMock;
         private PatientApiController _controller;
+        private Mock<UserManager<IdentityUser>> _userManagerMock;
+        private Mock<SignInManager<IdentityUser>> _signInManagerMock;
+        private AccountController _accountController;
 
         [SetUp]
         public void Setup()
@@ -43,6 +48,15 @@ namespace VitalSignsTests
             _hubMock.Setup(h => h.Clients).Returns(mockClients.Object);
 
             _controller = new PatientApiController(_context, _hubMock.Object);
+
+            var userStoreMock = new Mock<IUserStore<IdentityUser>>();
+            _userManagerMock = new Mock<UserManager<IdentityUser>>(userStoreMock.Object, null, null, null, null, null, null, null, null);
+            var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<IdentityUser>>();
+            _signInManagerMock = new Mock<SignInManager<IdentityUser>>(_userManagerMock.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
+
+            _accountController = new AccountController(_userManagerMock.Object, _signInManagerMock.Object);
+
         }
 
 
@@ -336,6 +350,83 @@ namespace VitalSignsTests
             Assert.That(content.Contains("Timestamp,HeartRate,SystolicBP,DiastolicBP,OxygenSaturation"));
             Assert.That(content.Contains("80"));
             Assert.That(content.Contains("85"));
+        }
+
+
+        [Test]
+        public void Login_Get_ReturnsView()
+        {
+            var result = _accountController.Login();
+            Assert.That(result, Is.InstanceOf<ViewResult>());
+        }
+
+        [Test]
+        public async Task Login_Post_SuccessfulLogin_RedirectsToIndex()
+        {
+            _signInManagerMock.Setup(s => s.PasswordSignInAsync("test@example.com", "password", false, false))
+                .ReturnsAsync(SignInResult.Success);
+
+            var result = await _accountController.Login("test@example.com", "password");
+
+            Assert.That(result, Is.InstanceOf<RedirectToActionResult>());
+            var redirect = (RedirectToActionResult)result;
+            Assert.That("Index" == redirect.ActionName);
+            Assert.That("Patient"== redirect.ControllerName);
+        }
+
+        [Test]
+        public async Task Login_Post_InvalidLogin_ReturnsViewWithError()
+        {
+            _signInManagerMock.Setup(s => s.PasswordSignInAsync(It.IsAny<string>(), It.IsAny<string>(), false, false))
+                .ReturnsAsync(SignInResult.Failed);
+
+            var result = await _accountController.Login("wrong@example.com", "wrong");
+
+            Assert.That(result, Is.InstanceOf<ViewResult>());
+            Assert.That("Invalid login" == _accountController.ViewBag.Error);
+        }
+
+        [Test]
+        public async Task Logout_Post_RedirectsToLogin()
+        {
+            var result = await _accountController.Logout();
+
+            _signInManagerMock.Verify(s => s.SignOutAsync(), Times.Once);
+            Assert.That(result, Is.InstanceOf<RedirectToActionResult>());
+            Assert.That("Login" == ((RedirectToActionResult)result).ActionName);
+        }
+
+        [Test]
+        public async Task Register_Post_SuccessfulRegistration_Redirects()
+        {
+            _userManagerMock.Setup(u => u.CreateAsync(It.IsAny<IdentityUser>(), "Password123"))
+                .ReturnsAsync(IdentityResult.Success);
+            _userManagerMock.Setup(u => u.GenerateEmailConfirmationTokenAsync(It.IsAny<IdentityUser>()))
+                .ReturnsAsync("token");
+
+            var result = await _accountController.Register("test@example.com", "Password123", "Password123");
+
+            Assert.That(result, Is.InstanceOf<RedirectToActionResult>());
+            Assert.That("RegisterConfirmation" == ((RedirectToActionResult)result).ActionName);
+        }
+
+        [Test]
+        public async Task Register_Post_PasswordMismatch_ReturnsViewWithError()
+        {
+            var result = await _accountController.Register("test@example.com", "pass", "notmatch");
+
+            Assert.That(result, Is.InstanceOf<ViewResult>());
+            Assert.That("Passwords do not match." == _accountController.ViewBag.Error);
+        }
+
+        [Test]
+        public async Task ConfirmEmail_InvalidUser_ReturnsNotFound()
+        {
+            _userManagerMock.Setup(u => u.FindByIdAsync("invalid")).ReturnsAsync((IdentityUser)null);
+
+            var result = await _accountController.ConfirmEmail("invalid", "token");
+
+            Assert.That(result, Is.InstanceOf<NotFoundResult>());
         }
 
 

@@ -56,12 +56,7 @@ namespace VitalSignsMonitor.Controllers
 
             if (result.Succeeded)
             {
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                var confirmationLink = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, token }, Request.Scheme);
-
-                // TODO: Send `confirmationLink` via email
-                Console.WriteLine($"Email confirmation link: {confirmationLink}");
-
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);             
                 return RedirectToAction("RegisterConfirmation");
             }
             if (!result.Succeeded)
@@ -93,43 +88,7 @@ namespace VitalSignsMonitor.Controllers
             return result.Succeeded ? View("ConfirmEmail") : View("Error");
         }
 
-        [HttpGet]
-        public IActionResult ForgotPassword() => View();
-
-        [HttpPost]
-        [HttpPost]
-        public async Task<IActionResult> ForgotPassword(string email)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
-                return RedirectToAction("ForgotPasswordConfirmation");
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var resetLink = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, Request.Scheme);
-
-            // TODO: Send `resetLink` via email
-            Console.WriteLine($"Password reset link: {resetLink}");
-
-            return RedirectToAction("ForgotPasswordConfirmation");
-        }
-
-        [HttpGet]
-        public IActionResult ResetPassword(string token, string email) =>
-    View(new ResetPasswordViewModel { Token = token, Email = email });
-
-        [HttpPost]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return RedirectToAction("ResetPasswordConfirmation");
-
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
-            return result.Succeeded ? RedirectToAction("ResetPasswordConfirmation") : View(model);
-        }
-
-
+       
 
     }
 
